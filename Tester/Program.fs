@@ -18,5 +18,5 @@ let main argv =
     let values = settings.["values"].Values ()
 
     let line = Console.ReadLine ()
-    // TODO: Dispose pattern
+    Settings.dispose ()
     9

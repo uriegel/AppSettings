@@ -1,5 +1,4 @@
 ﻿module Settings
-open System.Runtime.InteropServices
 open System.IO
 open System
 open Newtonsoft.Json.Linq
@@ -10,12 +9,15 @@ let private data = JObject ()
 
 let private locker = Object ()
 
+let private save = async {
+    lock locker (fun () -> 
+        Threading.Thread.Sleep 6000
+        File.WriteAllText (path, data.ToString ())
+    )
+}
+
 let private propertyChanged p =
-    async {
-        lock locker (fun () -> 
-            File.WriteAllText (path, data.ToString ())
-        )
-    } |> Async.Start
+    Async.Start save 
     
 data.PropertyChanged.Add propertyChanged
 
@@ -26,3 +28,4 @@ let initialize organization application =
 
 let get () = data
   
+let dispose () = Async.RunSynchronously save
