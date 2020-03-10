@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <Compile Include="Settings.fs" />
+    <Compile Include="Dll.fs" />
   </ItemGroup>
 
   <ItemGroup>

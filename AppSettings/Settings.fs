@@ -4,16 +4,25 @@ open System.IO
 open System
 open Newtonsoft.Json.Linq
 
-let mutable private subPath = ""
-let mutable data = JObject()
+let mutable private path = ""
 
+let private data = JObject ()
 
-let private path = Lazy<string>.Create <| fun () -> 
-    if subPath = "" then failwith "AppSettings not initialized"
-    else Path.Combine (Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), subPath)
+let private locker = Object ()
+
+let private propertyChanged p =
+    async {
+        lock locker (fun () -> 
+            File.WriteAllText (path, data.ToString ())
+        )
+    } |> Async.Start
+    
+data.PropertyChanged.Add propertyChanged
 
 let initialize organization application = 
-    subPath <- Path.Combine (organization, application)
+    let directory = Path.Combine (Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), organization, application)
+    if  not (Directory.Exists directory) then Directory.CreateDirectory directory |> ignore
+    path <- Path.Combine (directory, "settings.json")
 
-let get () =
-    data
+let get () = data
+  
